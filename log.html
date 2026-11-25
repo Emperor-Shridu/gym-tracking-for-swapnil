@@ -354,9 +354,7 @@
         }
 
         const html = matches.slice(0, 8).map((match, idx) => `
-          <div style="padding: 0.75rem; border-bottom: 1px solid #e0e0e0; cursor: pointer; background: white; transition: background 0.15s;"
-               onmouseover="this.style.background='#f5f5f5';" onmouseout="this.style.background='white';"
-               onclick="selectExercise('${nameId}', '${match.name.replace(/'/g, "\\'")}', '${match.muscles.replace(/'/g, "\\'")}', '${match.name}')">
+          <div class="suggestion-item" data-exercise="${match.name.replace(/"/g, '&quot;')}" data-muscles="${match.muscles.replace(/"/g, '&quot;')}" style="padding: 0.75rem; border-bottom: 1px solid #e0e0e0; cursor: pointer; background: white; transition: background 0.15s;">
             <div style="font-weight: 500; color: #0066cc;">${match.name}</div>
             <div style="font-size: 0.85rem; color: #999;">${match.muscles}</div>
           </div>
@@ -370,32 +368,28 @@
         suggestionsDiv.style.maxHeight = '300px';
         suggestionsDiv.style.overflowY = 'auto';
         suggestionsDiv.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+
+        suggestionsDiv.querySelectorAll('.suggestion-item').forEach(item => {
+          item.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const exerciseName = item.dataset.exercise;
+            const muscles = item.dataset.muscles;
+            input.value = exerciseName;
+            musclesInput.value = muscles;
+
+            const tips = exerciseTips[exerciseName];
+            if (tips) {
+              notesInput.value = tips.tips.join('\n');
+            } else {
+              const match = exercises.find(ex => ex.name === exerciseName);
+              if (match) {
+                notesInput.value = match.formNotes;
+              }
+            }
+            suggestionsDiv.style.display = 'none';
+          });
+        });
       }
-
-      function selectExercise(nameId, exerciseName, muscles, exerciseNameForTips) {
-        const input = document.getElementById(nameId);
-        const musclesInput = document.getElementById(nameId.replace('-name', '-muscles'));
-        const notesInput = document.getElementById(nameId.replace('-name', '-notes'));
-        const suggestionsDiv = document.getElementById(`${nameId.replace('-name', '')}-suggestions`);
-
-        input.value = exerciseName;
-        musclesInput.value = muscles;
-
-        // Use exercise tips if available, otherwise use historical notes
-        const tips = exerciseTips[exerciseNameForTips];
-        if (tips) {
-          notesInput.value = tips.tips.join('\n');
-        } else {
-          const match = exercises.find(ex => ex.name === exerciseName);
-          if (match) {
-            notesInput.value = match.formNotes;
-          }
-        }
-
-        suggestionsDiv.style.display = 'none';
-      }
-
-      window.selectExercise = selectExercise;
 
       input.addEventListener('input', (e) => {
         const value = e.target.value.toLowerCase().trim();

@@ -16,18 +16,16 @@ async function initializeData() {
     if (typeof SHEETS_CSV_URL !== 'undefined' && !SHEETS_CSV_URL.includes('YOUR_SHEET_ID')) {
       try {
         let data = await fetchFromGoogleSheets(SHEETS_CSV_URL);
-        if (data && data.length > 0) {
-          data = combineDuplicateExercises(data);
-          allData = data;
-          console.log(`Loaded ${allData.length} exercises from Google Sheets`);
-          return allData;
-        }
+        data = combineDuplicateExercises(data);
+        allData = data;
+        console.log(`Loaded ${allData.length} exercises from Google Sheets`);
+        return allData;
       } catch (sheetsError) {
         console.warn('Could not load from Google Sheets, falling back to seed data:', sheetsError);
       }
     }
 
-    // Fall back to seed.json
+    // Fall back to seed.json only if sheets fetch failed
     const response = await fetch('/data/seed.json');
     let data = await response.json();
     data = combineDuplicateExercises(data);
