@@ -67,7 +67,11 @@ function combineDuplicateExercises(data) {
  */
 async function fetchFromGoogleSheets(csvUrl) {
   try {
-    const response = await fetch(csvUrl);
+    // Add cache-busting parameter to avoid stale cached CSV
+    const bust = `_=${Date.now()}`;
+    const separator = csvUrl.includes('?') ? '&' : '?';
+    const url = `${csvUrl}${separator}${bust}`;
+    const response = await fetch(url, { cache: 'no-store' });
     const csv = await response.text();
     const parsed = parseCSV(csv);
     console.log(`Fetched ${parsed.length} exercises from Google Sheets`);

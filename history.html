@@ -130,6 +130,8 @@
               <div style="text-align: right;">
                 <div style="font-weight: 600; color: var(--accent);">${calculateVolume(ex).toFixed(0)}</div>
                 <div style="font-size: 0.85rem; color: var(--text-secondary);">volume</div>
+                <button type="button" class="btn danger" style="font-size: 0.7rem; padding: 0.2rem 0.5rem; margin-top: 0.3rem;"
+                  onclick="confirmDeleteExercise('${session.date}', '${ex.exercise.replace(/'/g, "\\'")}')">Delete</button>
               </div>
             </div>
             <div class="exercise-sets-row" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap;">
@@ -156,6 +158,8 @@
                 </div>
                 <span id="loc-${session.date}"
                   style="font-size: 0.8rem; font-weight: 600; padding: 0.2rem 0.6rem; border-radius: 999px; border: 1px solid; white-space: nowrap;"></span>
+                <button type="button" class="btn danger" style="font-size: 0.75rem; padding: 0.3rem 0.6rem; margin-left: auto;"
+                  onclick="event.stopPropagation(); confirmDeleteSession('${session.date}')">Delete Session</button>
               </div>
               <div style="color: var(--text-secondary); font-size: 1.5rem;">▼</div>
             </div>
@@ -178,6 +182,40 @@
     function toggleSession(index) {
       const session = document.getElementById(`session-${index}`);
       session.classList.toggle('expanded');
+    }
+
+    // Delete functions
+    function confirmDeleteSession(date) {
+      if (confirm(`Delete entire session from ${formatDate(date)}? This cannot be undone.`)) {
+        deleteWorkout(date);
+      }
+    }
+
+    function confirmDeleteExercise(date, exercise) {
+      if (confirm(`Delete "${exercise}" from ${formatDate(date)}? This cannot be undone.`)) {
+        deleteWorkout(date, exercise);
+      }
+    }
+
+    async function deleteWorkout(date, exercise) {
+      try {
+        const response = await fetch('/api/delete-workout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ date, exercise })
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+          alert(result.message || 'Deleted successfully');
+          loadHistory(); // Refresh
+        } else {
+          alert('Error: ' + (result.error || result.message || 'Failed to delete'));
+        }
+      } catch (error) {
+        alert('Error: ' + error.message);
+      }
     }
 
     // Load on page load

@@ -44,6 +44,10 @@ function doPost(e) {
       return logWorkout(payload.rows);
     }
 
+    if (payload.action === 'deleteWorkout') {
+      return deleteWorkout(payload);
+    }
+
     return ContentService.createTextOutput(JSON.stringify({
       error: 'Unknown action',
       action: payload.action
@@ -103,6 +107,63 @@ function logWorkout(rows) {
     return ContentService.createTextOutput(JSON.stringify({
       error: error.toString(),
       message: 'Failed to log workout'
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+/**
+ * Delete workout rows matching criteria
+ * Expects payload: { action: 'deleteWorkout', date: 'DD/MM/YYYY', exercise: 'Exercise Name' }
+ * If exercise omitted, deletes all exercises for that date (entire session)
+ */
+function deleteWorkout(payload) {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName('Workouts');
+    if (!sheet) {
+      return ContentService.createTextOutput(JSON.stringify({
+        success: true,
+        rowsDeleted: 0,
+        message: 'Workouts sheet not found'
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    const lastRow = sheet.getLastRow();
+    if (lastRow < 2) {
+      return ContentService.createTextOutput(JSON.stringify({
+        success: true,
+        rowsDeleted: 0,
+        message: 'No data to delete'
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // Get all data (skip header)
+    const data = sheet.getRange(2, 1, lastRow - 1, 14).getValues();
+    const rowsToDelete = [];
+
+    data.forEach((row, i) => {
+      const rowDate = row[0];
+      const rowExercise = row[1];
+      const matchDate = rowDate && rowDate.toString() === payload.date;
+      const matchExercise = !payload.exercise || (rowExercise && rowExercise === payload.exercise);
+
+      if (matchDate && matchExercise) {
+        rowsToDelete.push(i + 2); // +2 because data starts at row 2 (1-indexed, header at row 1)
+      }
+    });
+
+    // Delete from bottom up to preserve row indices
+    rowsToDelete.sort((a, b) => b - a).forEach(r => sheet.deleteRow(r));
+
+    return ContentService.createTextOutput(JSON.stringify({
+      success: true,
+      rowsDeleted: rowsToDelete.length,
+      message: `Deleted ${rowsToDelete.length} exercise record(s)`
+    })).setMimeType(ContentService.MimeType.JSON);
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({
+      error: error.toString(),
+      message: 'Failed to delete workout'
     })).setMimeType(ContentService.MimeType.JSON);
   }
 }
