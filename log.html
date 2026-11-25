@@ -353,8 +353,8 @@
           return;
         }
 
-        const html = matches.slice(0, 8).map((match, idx) => `
-          <div class="suggestion-item" data-exercise="${match.name.replace(/"/g, '&quot;')}" data-muscles="${match.muscles.replace(/"/g, '&quot;')}" style="padding: 0.75rem; border-bottom: 1px solid #e0e0e0; cursor: pointer; background: white; transition: background 0.15s;">
+        const html = matches.slice(0, 8).map((match) => `
+          <div class="suggestion-item" data-exercise="${match.name.replace(/"/g, '&quot;')}" data-muscles="${match.muscles.replace(/"/g, '&quot;')}" style="padding: 0.75rem; border-bottom: 1px solid #e0e0e0; cursor: pointer; background: white;">
             <div style="font-weight: 500; color: #0066cc;">${match.name}</div>
             <div style="font-size: 0.85rem; color: #999;">${match.muscles}</div>
           </div>
@@ -368,28 +368,37 @@
         suggestionsDiv.style.maxHeight = '300px';
         suggestionsDiv.style.overflowY = 'auto';
         suggestionsDiv.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
-
-        suggestionsDiv.querySelectorAll('.suggestion-item').forEach(item => {
-          item.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const exerciseName = item.dataset.exercise;
-            const muscles = item.dataset.muscles;
-            input.value = exerciseName;
-            musclesInput.value = muscles;
-
-            const tips = exerciseTips[exerciseName];
-            if (tips) {
-              notesInput.value = tips.tips.join('\n');
-            } else {
-              const match = exercises.find(ex => ex.name === exerciseName);
-              if (match) {
-                notesInput.value = match.formNotes;
-              }
-            }
-            suggestionsDiv.style.display = 'none';
-          });
-        });
+        suggestionsDiv.style.zIndex = '1000';
+        suggestionsDiv.style.position = 'absolute';
       }
+
+      // Event delegation: one click listener for all suggestion items
+      suggestionsDiv.addEventListener('mousedown', (e) => {
+        const item = e.target.closest('.suggestion-item');
+        if (!item) return;
+        e.preventDefault();
+        e.stopPropagation();
+
+        const exerciseName = item.dataset.exercise;
+        const muscles = item.dataset.muscles;
+        input.value = exerciseName;
+        musclesInput.value = muscles;
+
+        const tips = exerciseTips[exerciseName];
+        if (tips) {
+          notesInput.value = tips.tips.join('\n');
+        } else {
+          const match = exercises.find(ex => ex.name === exerciseName);
+          if (match) {
+            notesInput.value = match.formNotes;
+          }
+        }
+
+        suggestionsDiv.style.display = 'none';
+
+        // Auto-fill previous weights/reps for this exercise
+        applyPreviousSets(exerciseName, nameId);
+      });
 
       input.addEventListener('input', (e) => {
         const value = e.target.value.toLowerCase().trim();
@@ -399,13 +408,10 @@
           return;
         }
 
-        // Ensure exercises array is populated
         if (!exercises || exercises.length === 0) {
-          console.warn('Exercises array is empty');
           return;
         }
 
-        // Prioritize exercises that START with the search term, then those that contain it
         const startMatches = exercises.filter(ex => {
           const name = (ex.name || '').toLowerCase();
           return name.startsWith(value);
@@ -417,26 +423,40 @@
         });
 
         const matches = [...startMatches, ...containMatches];
-        console.log(`Search for "${value}": found ${matches.length} matches`);
-
         showSuggestions(matches);
       });
 
+      input.addEventListener('focus', () => {
+        if (input.value.trim() && suggestionsDiv.children.length > 0) {
+          suggestionsDiv.style.display = 'block';
+        }
+      });
+
       input.addEventListener('blur', () => {
-        // When you leave the field, try to match the exercise and auto-fill muscles/notes
-        setTimeout(() => {
-          const match = exercises.find(ex => ex.name === input.value);
-          if (match) {
-            musclesInput.value = match.muscles;
-            const tips = exerciseTips[match.name];
-            if (tips) {
-              notesInput.value = tips.tips.join('\n');
-            } else {
-              notesInput.value = match.formNotes;
-            }
-          }
-          suggestionsDiv.style.display = 'none';
-        }, 100);
+        setTimeout(() => { suggestionsDiv.style.display = 'none'; }, 150);
+      });
+    }
+
+    /**
+     * Auto-fill previous set weights/reps for a selected exercise
+     */
+    function applyPreviousSets(exerciseName, nameId) {
+      const baseId = nameId.replace('-name', '');
+      const setsContainer = document.getElementById(`${baseId}-sets`);
+      if (!setsContainer) return;
+
+      const records = getExerciseRecords(exerciseName);
+      if (records.length === 0) return;
+
+      const lastRecord = records[records.length - 1];
+      const setRows = setsContainer.querySelectorAll('.set-row');
+      setRows.forEach((row, idx) => {
+        const set = lastRecord.sets[idx];
+        if (!set) return;
+        const weightInput = row.querySelector('.weight-input');
+        const repsInput = row.querySelector('.reps-input');
+        if (weightInput) weightInput.value = set.weight;
+        if (repsInput) repsInput.value = set.reps;
       });
     }
 
