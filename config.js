@@ -7,7 +7,7 @@ const SHEETS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRND14Lv
 // Google Apps Script URL for logging workouts
 // Deploy GOOGLE_APPS_SCRIPT.gs as a Web App (doPost, Execute as you, Anyone) and paste the deployment URL here.
 // Also set APPS_SCRIPT_URL in your Vercel environment variables for production.
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwtYM_NbXMvi-saIeqCg-zgX7vumuh18baeDWczjfdWgHRneTWUpms5tesGJOasAYu9PA/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzKCuQnxDFw--LfdzF3rQFb6kDaAQrZD8yyvvDnfRDiSHJcY5E9ZHT2rITb6cRfKiDf8g/exec';
 
 // Color theme
 const THEME = {
