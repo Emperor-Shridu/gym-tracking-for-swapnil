@@ -1,10 +1,13 @@
 // Configuration for the gym tracker app
 
 // Google Sheet CSV URL for reading workout data
-const SHEETS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSbzd3KScVzIGUT4Df3WBxmYGUxAPLr0o0eck8_X0P98gItjWaMvgxVYANjHlJRDIsByr3yR5fbfp9e/pub?gid=1141952819&single=true&output=csv';
+// (use the published-to-web CSV endpoint; if Google regenerates the link, paste the new one here)
+const SHEETS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRND14LvcqFYY2f6z6ozHDwg-WwlvAlYLSXHAcGdiW9v3vAZZcqT5nRTWmnEmGuCziqr7gtGohRapqb/pub?gid=0&single=true&output=csv';
 
 // Google Apps Script URL for logging workouts
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxfW1DTodLaDKkkn3OEpDhcn-YIA0UfBsV_oabOCQd3AZgo8RxxO5brZizoc3J-drnq/exec';
+// Deploy GOOGLE_APPS_SCRIPT.gs as a Web App (doPost, Execute as you, Anyone) and paste the deployment URL here.
+// Also set APPS_SCRIPT_URL in your Vercel environment variables for production.
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwtYM_NbXMvi-saIeqCg-zgX7vumuh18baeDWczjfdWgHRneTWUpms5tesGJOasAYu9PA/exec';
 
 // Color theme
 const THEME = {
